@@ -9,7 +9,11 @@ setup(
     long_description=open("README.md", encoding="utf-8").read(),
     long_description_content_type="text/markdown",
     url="https://github.com/augustomiguelfarias7-cmd/claud_transformer.git",
-    packages=find_packages(),
+    
+    # Aqui indicamos que o arquivo principal é o cloud_transformer.py
+    py_modules=["cloud_transformer"],  
+    # Se tiver pacotes internos também, pode manter find_packages()
+    packages=find_packages(),  
     
     # Dependências que vão ser instaladas automaticamente
     install_requires=[
