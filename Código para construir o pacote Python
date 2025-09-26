@@ -1,0 +1,26 @@
+from setuptools import setup, find_packages
+
+setup(
+    name="cloud_transformer",
+    version="0.1.0",
+    author="Augusto Miguel",
+    author_email="augustomiguelfarias@gmail.com",  # Seu email
+    description="Biblioteca Python para trabalhar com modelos Transformers, geração de texto, imagem e vídeo.",
+    long_description=open("README.md", encoding="utf-8").read(),
+    long_description_content_type="text/markdown",
+    url="https://github.com/augustomiguelfarias7-cmd/claud_transformer.git",  # Link atualizado do seu repositório
+    packages=find_packages(),
+    install_requires=[
+        "torch>=2.0",
+        "transformers>=4.0",
+        "diffusers",
+        "Pillow",
+        "requests"
+    ],
+    python_requires='>=3.10',
+    classifiers=[
+        "Programming Language :: Python :: 3",
+        "License :: OSI Approved :: Apache License 2.0",
+        "Operating System :: OS Independent",
+    ],
+)
