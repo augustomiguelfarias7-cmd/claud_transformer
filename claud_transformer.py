@@ -1,6 +1,18 @@
-# cloudtransformer.py
+# cloud_transformer.py
 # Núcleo da biblioteca Cloud Transformer 🚀
-# ~ 200 linhas incluindo os 15 modelos
+# Versão 2.0 - Integrando modelos antigos, OpenAI e suporte a modelos do usuário
+# ~250 linhas incluindo todos os modelos e funcionalidades
+
+import os
+import torch
+from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
+from transformers import CLIPProcessor, CLIPModel as HFCLIP
+from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline, ControlNetModel as CN
+from PIL import Image
+from datasets import load_dataset
+import openai
+
+# ================== MODELOS ANTIGOS ================== #
 
 from .models.gpt2 import GPT2Model
 from .models.gptneo import GPTNeoModel
@@ -18,6 +30,7 @@ from .models.stable_diffusion import StableDiffusionModel
 from .models.controlnet import ControlNetModel
 from .models.bloom import BLOOMModel
 
+# ================== CLOUD TRANSFORMER ================== #
 
 class CloudTransformer:
     """
@@ -29,8 +42,14 @@ class CloudTransformer:
         print(model.generate("Olá mundo"))
     """
 
-    def __init__(self):
+    def __init__(self, openai_api_key=None):
+        # Chave API OpenAI
+        self.openai_api_key = openai_api_key
+        if openai_api_key:
+            openai.api_key = openai_api_key
+
         self.supported = {
+            # Modelos antigos
             "gpt2": GPT2Model,
             "gpt-neo": GPTNeoModel,
             "gpt-j": GPTJModel,
@@ -46,6 +65,12 @@ class CloudTransformer:
             "stable-diffusion": StableDiffusionModel,
             "controlnet": ControlNetModel,
             "bloom": BLOOMModel,
+            # Modelos OpenAI
+            "gpt-3.5-turbo": self._GPTOpenAI,
+            "gpt-4": self._GPTOpenAI,
+            "gpt-4-turbo": self._GPTOpenAI,
+            "dalle-2": self._DALLEOpenAI,
+            "dalle-3": self._DALLEOpenAI,
         }
 
     def available_models(self):
@@ -56,80 +81,58 @@ class CloudTransformer:
         """Carrega um modelo pelo nome"""
         if name not in self.supported:
             raise ValueError(f"Modelo '{name}' não encontrado! Use: {self.available_models()}")
-        return self.supported[name](**kwargs)
+        model_class = self.supported[name]
+        if name in ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]:
+            return model_class(name, self.openai_api_key, **kwargs)
+        elif name in ["dalle-2", "dalle-3"]:
+            return model_class(name, self.openai_api_key, **kwargs)
+        else:
+            return model_class(**kwargs)
 
+    # ================== MÓDULOS OPENAI ================== #
+    class _GPTOpenAI:
+        def __init__(self, model_name, api_key, **kwargs):
+            self.model_name = model_name
+            self.api_key = api_key
+            openai.api_key = api_key
 
-# ============= MODELS ============= #
-# Exemplos simplificados dentro da pasta /models/
-# Aqui vou mostrar 5 de exemplo, os outros seguem o mesmo padrão.
+        def generate(self, prompt, max_tokens=150, temperature=0.7):
+            response = openai.ChatCompletion.create(
+                model=self.model_name,
+                messages=[{"role": "user", "content": prompt}],
+                max_tokens=max_tokens,
+                temperature=temperature
+            )
+            return response.choices[0].message.content
 
-# models/gpt2.py
-from transformers import pipeline
+    class _DALLEOpenAI:
+        def __init__(self, model_name, api_key, **kwargs):
+            self.model_name = model_name
+            self.api_key = api_key
+            openai.api_key = api_key
 
-class GPT2Model:
-    def __init__(self):
-        self.generator = pipeline("text-generation", model="gpt2")
+        def generate(self, prompt, filename="output.png"):
+            response = openai.Image.create(
+                prompt=prompt,
+                model=self.model_name,
+                size="1024x1024"
+            )
+            image_data = response.data[0].b64_json
+            import base64
+            img_bytes = base64.b64decode(image_data)
+            with open(filename, "wb") as f:
+                f.write(img_bytes)
+            return filename
 
-    def generate(self, prompt, max_length=50):
-        return self.generator(prompt, max_length=max_length)[0]["generated_text"]
+    # ================== MODELOS DO USUÁRIO ================== #
+    def load_user_model(self, model_name, weights_path, tokenizer_path=None, **kwargs):
+        """Carrega um modelo do usuário fornecendo caminho dos pesos"""
+        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path or weights_path)
+        model = AutoModelForCausalLM.from_pretrained(weights_path)
+        return {"name": model_name, "model": model, "tokenizer": tokenizer}
 
-
-# models/whisper.py
-from transformers import pipeline
-
-class WhisperModel:
-    def __init__(self):
-        self.transcriber = pipeline("automatic-speech-recognition", model="openai/whisper-small")
-
-    def transcribe(self, audio_path):
-        return self.transcriber(audio_path)["text"]
-
-
-# models/stable_diffusion.py
-from diffusers import StableDiffusionPipeline
-import torch
-
-class StableDiffusionModel:
-    def __init__(self, device="cuda" if torch.cuda.is_available() else "cpu"):
-        self.pipe = StableDiffusionPipeline.from_pretrained("runwayml/stable-diffusion-v1-5")
-        self.pipe = self.pipe.to(device)
-
-    def generate(self, prompt, filename="output.png"):
-        image = self.pipe(prompt).images[0]
-        image.save(filename)
-        return filename
-
-
-# models/controlnet.py
-from diffusers import StableDiffusionControlNetPipeline, ControlNetModel as CN
-import torch
-
-class ControlNetModel:
-    def __init__(self, device="cuda" if torch.cuda.is_available() else "cpu"):
-        controlnet = CN.from_pretrained("lllyasviel/sd-controlnet-canny")
-        self.pipe = StableDiffusionControlNetPipeline.from_pretrained(
-            "runwayml/stable-diffusion-v1-5", controlnet=controlnet
-        ).to(device)
-
-    def generate(self, prompt, image_condition, filename="controlnet.png"):
-        result = self.pipe(prompt, image=image_condition).images[0]
-        result.save(filename)
-        return filename
-
-
-# models/clip.py
-from transformers import CLIPProcessor, CLIPModel as HFCLIP
-from PIL import Image
-
-class CLIPModel:
-    def __init__(self):
-        self.model = HFCLIP.from_pretrained("openai/clip-vit-base-patch32")
-        self.processor = CLIPProcessor.from_pretrained("openai/clip-vit-base-patch32")
-
-    def similarity(self, image_path, texts):
-        image = Image.open(image_path)
-        inputs = self.processor(text=texts, images=image, return_tensors="pt", padding=True)
-        outputs = self.model(**inputs)
-        logits_per_image = outputs.logits_per_image
-        probs = logits_per_image.softmax(dim=1)
-        return probs.tolist()
+    # ================== DATASETS ================== #
+    def load_dataset(self, dataset_name, split="train"):
+        """Carrega datasets da Hugging Face"""
+        ds = load_dataset(dataset_name, split=split)
+        return ds
