@@ -1,58 +1,31 @@
-Cloud Transformer 🚀
 
-Cloud Transformer é uma biblioteca Python para trabalhar com modelos Transformers, incluindo texto, multimodal, áudio e imagens. Ela oferece uma interface unificada para carregar e usar modelos populares, incluindo BLOOM, GPT2, Whisper, Stable Diffusion, ControlNet, CLIP e outros.
 
-Funcionalidades principais
+# Cloud Transformer 🚀 v2.0
 
-Carregar modelos de linguagem, multimodal e visão facilmente.
-
-Suporte a 15 modelos principais, todos acessíveis diretamente pelo Cloud Transformer.
-
-Geração de texto, transcrição de áudio, criação de imagens e análise multimodal.
-
-Suporte a GPU ou CPU, com verificação automática de dispositivos.
-
-Compatível com Python 3.10+.
-
+Cloud Transformer é uma biblioteca Python para trabalhar com modelos Transformers de texto, áudio, imagem, vídeo e integração OpenAI. Agora com suporte para treinar modelos, criar tokenizers, usar datasets e adicionar modelos próprios.
 
 
 ---
 
-Modelos disponíveis
+Funcionalidades Principais
 
-Modelo	Tipo	Biblioteca usada
+Carregar modelos de linguagem (GPT-2, GPT-Neo, GPT-J, T5, BART, BERT, RoBERTa, DistilBERT, BLOOM).
 
-GPT2	Texto	transformers
-GPT-Neo	Texto	transformers
-GPT-J	Texto	transformers
-T5	Texto	transformers
-BART	Texto	transformers
-BERT	Texto	transformers
-RoBERTa	Texto	transformers
-DistilBERT	Texto	transformers
-Whisper	Áudio	transformers
-Wav2Vec2	Áudio	transformers
-CLIP	Multimodal	transformers, Pillow
-DALL·E Mini	Imagem	diffusers, torch
-Stable Diffusion	Imagem	diffusers, torch
-ControlNet	Imagem	diffusers, torch
-BLOOM	Texto	transformers
+Carregar modelos multimodais (CLIP, DALL·E Mini, DALL·E2/3, Stable Diffusion, ControlNet).
 
+Suporte a modelos de áudio (Whisper, Wav2Vec2).
 
+Integração OpenAI: GPT-3.5, GPT-4, GPT-4 Turbo, DALL·E2/3.
 
----
+Criar tokenizers personalizados.
 
-Dependências da biblioteca
+Treinar e fine-tunar modelos.
 
-torch>=2.0 – para todos os modelos baseados em PyTorch.
+Adicionar modelos próprios fornecendo apenas o caminho dos pesos.
 
-transformers>=4.0 – modelos de linguagem e multimodal.
+Suporte a datasets (via datasets da Hugging Face).
 
-diffusers – modelos de geração de imagens (Stable Diffusion, ControlNet, DALL·E Mini).
-
-Pillow – manipulação de imagens para CLIP e pipelines de imagem.
-
-requests – comunicação com APIs e downloads de modelos.
+Compatível com Python >= 3.10 e CUDA se disponível.
 
 
 
@@ -65,29 +38,70 @@ pip install git+https://github.com/augustomiguelfarias7-cmd/claud_transformer.gi
 
 ---
 
-Exemplo de uso
+Exemplos de Uso
+
+1. Carregar modelos de texto
 
 from cloud_transformer import CloudTransformer
 
-# Inicializa a biblioteca
 ct = CloudTransformer()
+gpt2 = ct.load("gpt2")
+texto = gpt2.generate("Era uma vez um robô que")
+print(texto)
 
-# Lista todos os modelos disponíveis
-print("Modelos disponíveis:", ct.available_models())
 
-# Carrega o modelo BLOOM
-bloom_model = ct.load("bloom")
+---
 
-# Gera texto com o BLOOM
-prompt = "Era uma vez um dinossauro que"
-texto_gerado = bloom_model.generate(prompt, max_length=100)
-print("Texto gerado pelo BLOOM:", texto_gerado)
+2. Usar modelos da OpenAI
 
-# Carrega modelo de áudio (Whisper) e transcreve
-whisper_model = ct.load("whisper")
-texto_audio = whisper_model.transcribe("audio_exemplo.wav")
-print("Transcrição do áudio:", texto_audio)
+# Usando GPT-4 e GPT-3.5 Turbo
+openai_model = ct.load("openai", api_key="SUA_CHAVE_OPENAI", model="gpt-4")
+resposta = openai_model.generate("Explique a Revolução Industrial")
+print(resposta)
 
-# Carrega modelo de imagem (Stable Diffusion)
-sd_model = ct.load("stable-diffusion")
-sd_model.generate("Um robô pintando uma obra de arte futurista")
+# Usando DALL·E 3
+dalle3 = ct.load("openai", api_key="SUA_CHAVE_OPENAI", model="dall-e-3")
+dalle3.generate("Um dragão futurista pintando uma obra de arte")
+
+
+---
+
+3. Criar tokenizer personalizado
+
+from cloud_transformer import TokenizerManager
+
+tokenizer = TokenizerManager.create_tokenizer("meu_tokenizer")
+tokenizer.train_from_dataset("caminho/do/dataset.txt")
+
+
+---
+
+4. Treinar ou fine-tunar modelo
+
+from cloud_transformer import Trainer
+
+trainer = Trainer(model_name="gpt2")
+trainer.train(dataset_path="caminho/do/dataset")
+trainer.save_model("meu_modelo_finetunado")
+
+
+---
+
+5. Adicionar e usar modelo próprio
+
+meu_modelo = ct.load_custom("meu_modelo", path="caminho/pesos/modelo.pt")
+texto = meu_modelo.generate("Olá mundo!")
+print(texto)
+
+
+---
+
+6. Trabalhar com datasets
+
+from datasets import load_dataset
+
+dataset = load_dataset("wikitext", "wikitext-2-raw-v1")
+print(dataset["train"][0])
+
+
+---
