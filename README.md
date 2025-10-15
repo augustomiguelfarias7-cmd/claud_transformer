@@ -1,94 +1,74 @@
+Cloud Transformer 3.0 🚀
 
-
-# Cloud Transformer 🚀 v2.0
-
-Cloud Transformer é uma biblioteca Python para trabalhar com modelos Transformers de texto, áudio, imagem, vídeo e integração OpenAI. Agora com suporte para treinar modelos, criar tokenizers, usar datasets e adicionar modelos próprios.
-
-
----
-
-Funcionalidades Principais
-
-Carregar modelos de linguagem (GPT-2, GPT-Neo, GPT-J, T5, BART, BERT, RoBERTa, DistilBERT, BLOOM).
-
-Carregar modelos multimodais (CLIP, DALL·E Mini, DALL·E2/3, Stable Diffusion, ControlNet).
-
-Suporte a modelos de áudio (Whisper, Wav2Vec2).
-
-Integração OpenAI: GPT-3.5, GPT-4, GPT-4 Turbo, DALL·E2/3.
-
-Criar tokenizers personalizados.
-
-Treinar e fine-tunar modelos.
-
-Adicionar modelos próprios fornecendo apenas o caminho dos pesos.
-
-Suporte a datasets (via datasets da Hugging Face).
-
-Compatível com Python >= 3.10 e CUDA se disponível.
-
+Cloud Transformer é uma biblioteca Python para trabalhar com modelos Transformers, integração com OpenAI GPT, busca e clonagem de repositórios GitHub, criação de agentes e uso de Transformer Lite. Tudo funcional e preparado para estudo, testes e projetos.
 
 
 ---
 
-Instalação
+Instalação:
+
+Para instalar diretamente do GitHub, rode:
 
 pip install git+https://github.com/augustomiguelfarias7-cmd/claud_transformer.git
 
+Dependências principais:
+Python >= 3.10, torch >= 2.0, transformers >= 4.0, diffusers >= 1.0, Pillow >= 9.0, requests >= 2.30, openai >= 1.0, datasets >= 2.0, PyGithub >= 1.0, GitPython >= 3.1
+
 
 ---
 
-Exemplos de Uso
+Funcionalidades principais:
 
-1. Carregar modelos de texto
+Transformer Lite — criar modelos Transformer leves próprios.
+
+Modelos do usuário — carregar modelos Transformers customizados.
+
+GitHub Repositories — buscar e clonar repositórios via token.
+
+Agentes — criar agentes simples para automatizar respostas.
+
+AutoAgent / AutoGPT — integração com agentes inteligentes.
+
+OpenAI GPT-3/3.5/4 — geração de texto com modelos da OpenAI.
+
+
+
+---
+
+Exemplo de uso:
+
+Inicialize a biblioteca com suas chaves da OpenAI e GitHub:
 
 from cloud_transformer import CloudTransformer
 
-ct = CloudTransformer()
-gpt2 = ct.load("gpt2")
-texto = gpt2.generate("Era uma vez um robô que")
-print(texto)
+ct = CloudTransformer(
+    openai_api_key="YOUR_OPENAI_KEY",
+    github_token="YOUR_GITHUB_TOKEN"
+)
+
+Usando GPT-2:
+
+gpt2_model = ct.load_user_model("gpt2", weights_path="gpt2")
+tokenizer = gpt2_model["tokenizer"]
+model = gpt2_model["model"]
+
+input_text = "Olá mundo! Este é um teste com GPT-2."
+inputs = tokenizer(input_text, return_tensors="pt")
+outputs = model.generate(**inputs, max_length=50)
+print("GPT-2:", tokenizer.decode(outputs[0], skip_special_tokens=True))
+
+Usando GPT-3.5 Turbo:
+
+gpt3_model = ct.OpenAIModel("gpt-3.5-turbo", ct.openai_api_key)
+response = gpt3_model.generate("Escreva um pequeno poema sobre robôs e inteligência artificial.")
+print("GPT-3.5 Turbo:", response)
 
 
 ---
 
-2. Usar modelos da OpenAI
+Licença:
 
-# Usando GPT-4 e GPT-3.5 Turbo
-openai_model = ct.load("openai", api_key="SUA_CHAVE_OPENAI", model="gpt-4")
-resposta = openai_model.generate("Explique a Revolução Industrial")
-print(resposta)
+Cloud Transformer 3.0 é distribuída com a CTCL (Cloud Transformer Community License).
+Permite: uso comercial, estudo, modificação e redistribuição com a mesma licença.
+Proibido uso indevido ou sexual sem autorização do autor.
 
-# Usando DALL·E 3
-dalle3 = ct.load("openai", api_key="SUA_CHAVE_OPENAI", model="dall-e-3")
-dalle3.generate("Um dragão futurista pintando uma obra de arte")
-
-
----
-
-3. Criar tokenizer personalizado
-
-from cloud_transformer import TokenizerManager
-
-tokenizer = TokenizerManager.create_tokenizer("meu_tokenizer")
-tokenizer.train_from_dataset("caminho/do/dataset.txt")
-
-
----
-
-4. Treinar ou fine-tunar modelo
-
-from cloud_transformer import Trainer
-
-trainer = Trainer(model_name="gpt2")
-trainer.train(dataset_path="caminho/do/dataset")
-trainer.save_model("meu_modelo_finetunado")
-
-
----
-
-5. Adicionar e usar modelo próprio
-
-meu_modelo = ct.load_custom("meu_modelo", path="caminho/pesos/modelo.pt")
-texto = meu_modelo.generate("Olá mundo!")
-print(texto)
