@@ -1,8 +1,8 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="cloud_transformer",  
-    version="3.0.0",           
+    name="cloud_transformer",  # Nome do pacote correto
+    version="3.0.0",           # Versão atualizada
     author="Augusto Miguel de Farias",
     author_email="augustomiguelfarias@gmail.com",
     description="Biblioteca Python para trabalhar com modelos Transformers, geração de texto, imagem, áudio, vídeo e integração OpenAI/GitHub/Agentes.",
