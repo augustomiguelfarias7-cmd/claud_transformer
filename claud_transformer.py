@@ -1,138 +1,95 @@
 # cloud_transformer.py
-# Núcleo da biblioteca Cloud Transformer 🚀
-# Versão 2.0 - Integrando modelos antigos, OpenAI e suporte a modelos do usuário
-# ~250 linhas incluindo todos os modelos e funcionalidades
+# Cloud Transformer 3.0 - Núcleo da biblioteca
+# Copyright (c) 2025 Augusto Miguel de Farias
+# Funcionalidades: Modelos Transformers, GitHub, AutoAgent, Agents, OpenAI
 
 import os
 import torch
-from transformers import pipeline, AutoTokenizer, AutoModelForCausalLM
-from transformers import CLIPProcessor, CLIPModel as HFCLIP
-from diffusers import StableDiffusionPipeline, StableDiffusionControlNetPipeline, ControlNetModel as CN
-from PIL import Image
-from datasets import load_dataset
-import openai
+import torch.nn as nn
+from typing import Any, Dict, List, Tuple
 
-# ================== MODELOS ANTIGOS ================== #
+# ----------- OpenAI -----------
 
-from .models.gpt2 import GPT2Model
-from .models.gptneo import GPTNeoModel
-from .models.gptj import GPTJModel
-from .models.t5 import T5Model
-from .models.bart import BARTModel
-from .models.bert import BERTModel
-from .models.roberta import RoBERTaModel
-from .models.distilbert import DistilBERTModel
-from .models.whisper import WhisperModel
-from .models.wav2vec2 import Wav2Vec2Model
-from .models.clip import CLIPModel
-from .models.dalle_mini import DALLEMiniModel
-from .models.stable_diffusion import StableDiffusionModel
-from .models.controlnet import ControlNetModel
-from .models.bloom import BLOOMModel
+try:
+    import openai
+except:
+    openai = None
 
-# ================== CLOUD TRANSFORMER ================== #
+# ----------- Transformers -----------
 
-class CloudTransformer:
-    """
-    Núcleo que conecta os modelos disponíveis.
-    Uso:
-        from cloud_transformer import CloudTransformer
-        ct = CloudTransformer()
-        model = ct.load("gpt2")
-        print(model.generate("Olá mundo"))
-    """
+try:
+    from transformers import AutoTokenizer, AutoModelForCausalLM
+except:
+    AutoTokenizer = None
+    AutoModelForCausalLM = None
 
-    def __init__(self, openai_api_key=None):
-        # Chave API OpenAI
-        self.openai_api_key = openai_api_key
-        if openai_api_key:
-            openai.api_key = openai_api_key
+# ----------- GitHub -----------
 
-        self.supported = {
-            # Modelos antigos
-            "gpt2": GPT2Model,
-            "gpt-neo": GPTNeoModel,
-            "gpt-j": GPTJModel,
-            "t5": T5Model,
-            "bart": BARTModel,
-            "bert": BERTModel,
-            "roberta": RoBERTaModel,
-            "distilbert": DistilBERTModel,
-            "whisper": WhisperModel,
-            "wav2vec2": Wav2Vec2Model,
-            "clip": CLIPModel,
-            "dalle-mini": DALLEMiniModel,
-            "stable-diffusion": StableDiffusionModel,
-            "controlnet": ControlNetModel,
-            "bloom": BLOOMModel,
-            # Modelos OpenAI
-            "gpt-3.5-turbo": self._GPTOpenAI,
-            "gpt-4": self._GPTOpenAI,
-            "gpt-4-turbo": self._GPTOpenAI,
-            "dalle-2": self._DALLEOpenAI,
-            "dalle-3": self._DALLEOpenAI,
-        }
+try:
+    from github import Github
+except:
+    Github = None
 
-    def available_models(self):
-        """Lista os modelos disponíveis"""
-        return list(self.supported.keys())
+try:
+    from git import Repo
+except:
+    Repo = None
 
-    def load(self, name, **kwargs):
-        """Carrega um modelo pelo nome"""
-        if name not in self.supported:
-            raise ValueError(f"Modelo '{name}' não encontrado! Use: {self.available_models()}")
-        model_class = self.supported[name]
-        if name in ["gpt-3.5-turbo", "gpt-4", "gpt-4-turbo"]:
-            return model_class(name, self.openai_api_key, **kwargs)
-        elif name in ["dalle-2", "dalle-3"]:
-            return model_class(name, self.openai_api_key, **kwargs)
-        else:
-            return model_class(**kwargs)
+# ----------- Agents / AutoAgent -----------
 
-    # ================== MÓDULOS OPENAI ================== #
-    class _GPTOpenAI:
-        def __init__(self, model_name, api_key, **kwargs):
-            self.model_name = model_name
-            self.api_key = api_key
-            openai.api_key = api_key
+import importlib
+import shutil
+import subprocess
 
-        def generate(self, prompt, max_tokens=150, temperature=0.7):
-            response = openai.ChatCompletion.create(
-                model=self.model_name,
-                messages=[{"role": "user", "content": prompt}],
-                max_tokens=max_tokens,
-                temperature=temperature
-            )
-            return response.choices[0].message.content
+# ================== Transformer Lite ==================
+class TransformerLite(nn.Module):
+    def __init__(self, vocab_size=30522, d_model=256, nhead=8, num_layers=4,
+                 dim_feedforward=1024, dropout=0.1):
+        super().__init__()
+        self.embedding = nn.Embedding(vocab_size, d_model)
+        encoder_layer = nn.TransformerEncoderLayer(d_model=d_model, nhead=nhead,
+                                                   dim_feedforward=dim_feedforward,
+                                                   dropout=dropout)
+        self.transformer = nn.TransformerEncoder(encoder_layer, num_layers=num_layers)
+        self.lm_head = nn.Linear(d_model, vocab_size)
 
-    class _DALLEOpenAI:
-        def __init__(self, model_name, api_key, **kwargs):
-            self.model_name = model_name
-            self.api_key = api_key
-            openai.api_key = api_key
+    def forward(self, x):
+        try:
+            x = self.embedding(x)
+            x = self.transformer(x)
+            logits = self.lm_head(x)
+            return logits
+        except:
+            return None
 
-        def generate(self, prompt, filename="output.png"):
-            response = openai.Image.create(
-                prompt=prompt,
-                model=self.model_name,
-                size="1024x1024"
-            )
-            image_data = response.data[0].b64_json
-            import base64
-            img_bytes = base64.b64decode(image_data)
-            with open(filename, "wb") as f:
-                f.write(img_bytes)
-            return filename
+# ================== GitHub Repositories ==================
+class GitHubRepositories:
+    def __init__(self, token: str = None):
+        self.token = token or os.getenv("GITHUB_TOKEN")
+        self.client = Github(self.token) if self.token and Github else None
 
-    # ================== MODELOS DO USUÁRIO ================== #
-    def load_user_model(self, model_name, weights_path, tokenizer_path=None, **kwargs):
-        """Carrega um modelo do usuário fornecendo caminho dos pesos"""
-        tokenizer = AutoTokenizer.from_pretrained(tokenizer_path or weights_path)
-        model = AutoModelForCausalLM.from_pretrained(weights_path)
-        return {"name": model_name, "model": model, "tokenizer": tokenizer}
+    def is_configured(self) -> bool:
+        return self.client is not None
 
-    # ================== DATASETS ================== #
-    def load_dataset(self, dataset_name, split="train"):
-        """Carrega datasets da Hugging Face"""
-        ds = load_dataset(dataset_name, split=split)
-        return ds
+    def find_repos(self, query: str, max_results: int = 5) -> List[Tuple[str,str]]:
+        if not self.client:
+            return []
+        try:
+            results = []
+            repos = self.client.search_repositories(query=query, sort="stars", order="desc")
+            for r in repos[:max_results]:
+                results.append((r.full_name, r.clone_url))
+            return results
+        except:
+            return []
+
+    def clone_repo(self, clone_url: str, destination: str = "./repos"):
+        if Repo is None:
+            return {"status":"disabled","path":None}
+        try:
+            os.makedirs(destination, exist_ok=True)
+            import pathlib
+            repo_name = pathlib.Path(clone_url).stem.replace(".git","")
+            dest_path = os.path.join(destination, repo_name)
+            if os.path.exists(dest_path):
+                return {"status":"exists","path":dest_path}
