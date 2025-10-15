@@ -8,7 +8,7 @@ Cloud Transformer é uma biblioteca Python para trabalhar com modelos Transforme
 Instalação:
 
 Para instalar diretamente do GitHub, rode:
-'''bash 
+ 
 pip install git+https://github.com/augustomiguelfarias7-cmd/claud_transformer.git
 
 Dependências principais:
