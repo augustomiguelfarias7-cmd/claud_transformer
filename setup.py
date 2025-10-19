@@ -16,8 +16,8 @@ setup(
 
     # Dependências obrigatórias
     install_requires=[
-        "torch>=2.0",
-        "transformers>=4.0",
+        "torch>=2.0.0",
+        "transformers>=4.0.",
         "diffusers>=4.0",
         "Pillow>=4.0",
         "requests>=2.30",
@@ -29,7 +29,7 @@ setup(
 
     # Extras opcionais
     extras_require={
-        "vision": ["diffusers>=1.0", "Pillow>=9.0"],  # geração de imagens
+        "vision": ["diffusers>=4.0", "Pillow>=9.0"],  # geração de imagens
         "text": ["transformers>=4.0"],                # modelos de texto
         "audio": ["torchaudio>=2.1"],                # suporte a áudio
         "video": ["opencv-python>=4.7"],             # suporte a vídeo futuro
