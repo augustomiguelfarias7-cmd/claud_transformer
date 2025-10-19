@@ -1,9 +1,6 @@
-
 from setuptools import setup, find_packages
 
-# --- Início da Lógica de Leitura Segura do README.md ---
-# Esta é a parte que previne o erro "metadata-generation-failed"
-# se o arquivo README.md não for encontrado durante o build.
+# --- Lógica de Leitura Segura do README.md ---
 try:
     with open("README.md", encoding="utf-8") as f:
         long_description = f.read()
@@ -12,27 +9,26 @@ except FileNotFoundError:
 # --- Fim da Lógica de Leitura Segura ---
 
 setup(
-    name="cloud_transformer",  # Nome do pacote correto
-    version="3.0.0",           # Versão atualizada
+    name="cloud_transformer",
+    version="3.0.0",
     author="Augusto Miguel de Farias",
     author_email="augustomiguelfarias@gmail.com",
     description="Biblioteca Python para trabalhar com modelos Transformers, geração de texto, imagem, áudio, vídeo e integração OpenAI/GitHub/Agentes.",
     
-    # Usa a variável 'long_description' que foi lida de forma segura
     long_description=long_description,
     long_description_content_type="text/markdown",
     
     url="https://github.com/augustomiguelfarias7-cmd/claud_transformer.git",
 
-    # Arquivo principal e pacotes
     py_modules=["cloud_transformer"],
     packages=find_packages(),
 
     # Dependências obrigatórias
     install_requires=[
         "torch>=2.0",
-        "transformers>=4.0",    # Ponto final removido aqui!
-        "diffusers>=4.0",
+        "transformers>=4.0",
+        # ALTERAÇÃO: Mudança da restrição de versão para a mais antiga encontrada (0.0.1)
+        "diffusers>=0.0.1", 
         "Pillow>=4.0",
         "requests>=2.30",
         "openai>=1.0",
@@ -43,11 +39,12 @@ setup(
 
     # Extras opcionais
     extras_require={
-        "vision": ["diffusers>=4.0", "Pillow>=9.0"],  # geração de imagens
-        "text": ["transformers>=4.0"],                # modelos de texto
-        "audio": ["torchaudio>=2.1"],                # suporte a áudio
-        "video": ["opencv-python>=4.7"],             # suporte a vídeo futuro
-        "agents": ["auto-gpt>=0.1"]                  # integração com AutoAgent / AutoGPT
+        # ALTERAÇÃO: Mudança da restrição de versão para a mais antiga encontrada (0.0.1)
+        "vision": ["diffusers>=0.0.1", "Pillow>=9.0"], # geração de imagens
+        "text": ["transformers>=4.0"],
+        "audio": ["torchaudio>=2.1"],
+        "video": ["opencv-python>=4.7"],
+        "agents": ["auto-gpt>=0.1"]
     },
 
     python_requires='>=3.10',
