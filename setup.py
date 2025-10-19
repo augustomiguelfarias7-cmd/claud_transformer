@@ -16,7 +16,7 @@ setup(
 
     # Dependências obrigatórias
     install_requires=[
-        "torch>=2.0.0",
+        "torch>=2.0",
         "transformers>=4.0.",
         "diffusers>=4.0",
         "Pillow>=4.0",
