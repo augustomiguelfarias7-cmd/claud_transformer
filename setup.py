@@ -18,8 +18,8 @@ setup(
     install_requires=[
         "torch>=2.0",
         "transformers>=4.0",
-        "diffusers>=1.0",
-        "Pillow>=9.0",
+        "diffusers>=4.0",
+        "Pillow>=4.0",
         "requests>=2.30",
         "openai>=1.0",
         "datasets>=2.0",
