@@ -1,4 +1,15 @@
+
 from setuptools import setup, find_packages
+
+# --- Início da Lógica de Leitura Segura do README.md ---
+# Esta é a parte que previne o erro "metadata-generation-failed"
+# se o arquivo README.md não for encontrado durante o build.
+try:
+    with open("README.md", encoding="utf-8") as f:
+        long_description = f.read()
+except FileNotFoundError:
+    long_description = "Consulte o repositório GitHub para a descrição completa."
+# --- Fim da Lógica de Leitura Segura ---
 
 setup(
     name="cloud_transformer",  # Nome do pacote correto
@@ -6,18 +17,21 @@ setup(
     author="Augusto Miguel de Farias",
     author_email="augustomiguelfarias@gmail.com",
     description="Biblioteca Python para trabalhar com modelos Transformers, geração de texto, imagem, áudio, vídeo e integração OpenAI/GitHub/Agentes.",
-    long_description=open("README.md", encoding="utf-8").read(),
+    
+    # Usa a variável 'long_description' que foi lida de forma segura
+    long_description=long_description,
     long_description_content_type="text/markdown",
+    
     url="https://github.com/augustomiguelfarias7-cmd/claud_transformer.git",
 
-    # Arquivo principal
-    py_modules=["cloud_transformer"],  
+    # Arquivo principal e pacotes
+    py_modules=["cloud_transformer"],
     packages=find_packages(),
 
     # Dependências obrigatórias
     install_requires=[
         "torch>=2.0",
-        "transformers>=4.0.",
+        "transformers>=4.0",    # Ponto final removido aqui!
         "diffusers>=4.0",
         "Pillow>=4.0",
         "requests>=2.30",
@@ -44,4 +58,3 @@ setup(
         "Operating System :: OS Independent",
     ],
 )
-
